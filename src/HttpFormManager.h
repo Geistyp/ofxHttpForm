@@ -89,6 +89,11 @@ class HttpFormManager : public ofThread{
 		void setProxy(bool enableProxy, string host, int port, string username, string password);
     
 		void setCredentials(string username, string password);
+
+		void setRequestType(string type){ requestType = type; }
+
+		void setRequestHeader(string id, string value){ requestHeaders[id] = value; }
+		void clearRequestHeader(){ requestHeaders.clear(); }
 		
 		ofEvent<HttpFormResponse> formResponseEvent;
 
@@ -120,5 +125,8 @@ class HttpFormManager : public ofThread{
 		string							username;
 		string							password;
 		bool							usingCredentials;
+
+		std::string						requestType;
+		std::map<string, string>		requestHeaders;
 	
 };

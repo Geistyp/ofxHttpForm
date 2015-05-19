@@ -38,6 +38,8 @@ HttpFormManager::HttpFormManager(){
 	enableProxy = false;
 	proxyPort = 80;
 	usingCredentials = false;
+
+	requestType = HTTPRequest::HTTP_POST;
 }
 
 HttpFormManager::~HttpFormManager(){
@@ -129,7 +131,7 @@ void HttpFormManager::submitForm( HttpForm f, bool ignoreReply, string identifie
 	unlock();
 	
 	if ( !isThreadRunning() ){	//if the queue is not running, lets start it
-		startThread(true, false);
+		startThread();
 	}	
 }
 
@@ -216,7 +218,12 @@ bool HttpFormManager::executeForm( HttpFormResponse* resp, bool sendResultThroug
 
 		float t = ofGetElapsedTimef();
 		HTTPResponse res;
-		HTTPRequest req(HTTPRequest::HTTP_POST, path, HTTPMessage::HTTP_1_1);
+		HTTPRequest req(requestType, path, HTTPMessage::HTTP_1_1);
+
+		// set request headers
+		for (map<string, string>::iterator it = requestHeaders.begin(); it != requestHeaders.end(); it++){
+			req.set(it->first, it->second);
+		}
 
 		req.set( "User-Agent", userAgent.c_str() );
 		if (acceptString.length() > 0){
@@ -264,6 +271,8 @@ bool HttpFormManager::executeForm( HttpFormResponse* resp, bool sendResultThroug
 		}//else{
 		//	ofLogNotice("HttpFormManager") << "NO PROXY USED! " << resp->action;
 		//}
+
+		req.write(std::cout);
 
 		try{
 			form->write(httpSession->sendRequest(req));
@@ -372,9 +381,9 @@ bool HttpFormManager::executeForm( HttpFormResponse* resp, bool sendResultThroug
 		}
 
 		if (sendResultThroughEvents ){	
-			if ( !resp->ignoreReply )
-				if (timeToStop == false)	//see if we have been destructed!
-					ofNotifyEvent( formResponseEvent, *resp, this );	
+			//if ( !resp->ignoreReply )		// why add this
+			if (timeToStop == false)	//see if we have been destructed!
+				ofNotifyEvent( formResponseEvent, *resp, this );	
 		}
 
 	}catch(Exception& exc){
